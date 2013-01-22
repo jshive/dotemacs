@@ -1,0 +1,39 @@
++trash  "Trash"
++draft  "Drafts"
+Gmail{
+		%INBOX:"frsn@gmail.com"/clear@imap.gmail.com:993! "Inbox"
+		[Google Mail]{
+				%[Google Mail]/Papierkorb:"frsn@gmail.com"/clear@imap.gmail.com:993! "Trash"
+				%[Google Mail]/Markiert:"frsn@gmail.com"/clear@imap.gmail.com:993! "Starred"
+				%[Google Mail]/Gesendet:"frsn@gmail.com"/clear@imap.gmail.com:993!  "Sent"
+				%[Google Mail]/Entwürfe:"frsn@gmail.com"/clear@imap.gmail.com:993! "Draft"
+				%[Google Mail]/Alle Nachrichten:"frsn@gmail.com"/clear@imap.gmail.com:993! "All"
+		}
+
+		Labels{
+				%All:"frsn@gmail.com"/clear@imap.gmail.com:993! "[All]"
+				%Calendar:"frsn@gmail.com"/clear@imap.gmail.com:993! "[Calendar]"
+				%Cloud:"frsn@gmail.com"/clear@imap.gmail.com:993! "[Cloud]"
+				%Friends:"frsn@gmail.com"/clear@imap.gmail.com:993! "[Friends]"
+		}
+}
+
+
+List{
+		%inbox:"a.frsn@gmail.com"/clear@imap.gmail.com:993! "Inbox"
+		%Trash:"a.frsn@gmail.com"/clear@imap.gmail.com:993! "Trash"
+		%Sent:"a.frsn@gmail.com"/clear@imap.gmail.com:993!  "Sent"
+		%Queue:"a.frsn@gmail.com"/clear@imap.gmail.com:993! "Queue"
+		Abo{
+				%U-Boot:"a.frsn@gmail.com"/clear@imap.gmail.com:993! "[u-boot]"
+				%MTD:"a.frsn@gmail.com"/clear@imap.gmail.com:993! "[mtd]"
+				%LinuxPPC-Dev:"a.frsn@gmail.com"/clear@imap.gmail.com:993! "[ppcdev]"
+		}
+}
+
+
+Alice{
+		%inbox:"a.frsn@alice.de"/clear@imap.alice.de:143 "Inbox-a"
+		%inbox:"i.frsn@alice.de"/clear@imap.alice.de:143 "Inbox-i"
+
+}

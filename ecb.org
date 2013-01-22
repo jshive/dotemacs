@@ -1,0 +1,383 @@
+* IDE Configuration
+** Menu
+#+begin_src emacs-lisp
+(menu-bar-mode t)
+#+end_src
+
+** Theme
+#+begin_src emacs-lisp
+(message "Configure theme ...")
+(load-theme 'sweet t)
+#+end_src
+
+** cmake-mode
+#+begin_src emacs-lisp
+(message "Configure CMake-mode ...")
+  (require 'cmake-mode)
+  (setq auto-mode-alist
+		(append '(("CMakeLists\\.txt\\'" . cmake-mode)
+				  ("\\.cmake\\'" . cmake-mode))
+				auto-mode-alist))
+
+(defun maybe-cmake-project-hook ()
+  (if (file-exists-p "CMakeLists.txt") (cmake-project-mode)))
+
+(add-hook 'c-mode-hook 'maybe-cmake-project-hook)
+(add-hook 'c++-mode-hook 'maybe-cmake-project-hook)
+#+end_src
+
+** Dbus compile notify
+   #+begin_src emacs-lisp
+(message "Configure 'compile notify over dbus' ...")
+(require 'dbus)
+(defun send-desktop-notification (summary body timeout)
+  "call notification-daemon method METHOD with ARGS over dbus"
+  (dbus-call-method
+	:session                        ; use the session (not system) bus
+	"org.freedesktop.Notifications" ; service name
+	"/org/freedesktop/Notifications"   ; path name
+	"org.freedesktop.Notifications" "Notify" ; Method
+	"emacs"
+	0
+	""
+	summary
+	body
+	'(:array)
+	'(:array :signature "{sv}")
+	':int32 timeout))
+
+(defun pw/compile-notify (buffer message)
+  (send-desktop-notification "Emacs Compile:" message 0))
+
+(setq compilation-finish-function 'pw/compile-notify)
+   #+end_src
+
+** Global
+#+begin_src emacs-lisp
+(message "Configure 'global' ...")
+
+(autoload 'gtags-mode "gtags" "" t)
+(add-hook 'c-mode-hook (lambda () (gtags-mode 1)))
+(add-hook 'c++-mode-hook (lambda () (gtags-mode 1)))
+
+(defun gtags-root-dir ()
+	"Returns GTAGS root directory or nil if doesn't exist."
+	(with-temp-buffer
+	  (if (zerop (call-process "global" nil t nil "-pr"))
+		  (buffer-substring (point-min) (1- (point-max))
+		nil)))
+)
+
+(defun gtags-update ()
+	"Make GTAGS incremental update"
+	(call-process "global" nil nil nil "-u"))
+
+(defun gtags-update-hook ()
+	(when (gtags-root-dir)
+	  (gtags-update)))
+
+(add-hook 'after-save-hook #'gtags-update-hook)
+
+#+end_src
+
+** CEDET for ECB
+#+begin_src emacs-lisp
+(message "Configure CEDET for ECB.")
+
+(require 'semantic)
+(require 'semantic/bovine/gcc)
+(require 'semantic/ia)
+
+(semantic-mode 1)
+
+(global-semantic-idle-scheduler-mode 1)
+(global-semanticdb-minor-mode 1)
+
+(global-semantic-idle-scheduler-mode 1)
+;(global-semantic-idle-summary-mode 1)
+;(global-semantic-idle-completions-mode 1)
+;(global-semantic-decoration-mode 1)
+;(global-semantic-highlight-func-mode 1)
+;(global-semantic-stickyfunc-mode 1)
+;(global-semantic-show-unmatched-syntax-mode 1)
+;(global-semantic-mru-bookmark-mode 1)
+
+(require 'cedet-global)
+( when (cedet-gnu-global-version-check t)
+			  (message "Configure semanticdb/global ...")
+			  (semanticdb-enable-gnu-global-databases 'c-mode)
+			  (semanticdb-enable-gnu-global-databases 'c++-mode)
+)
+
+(defun my-semantic-hook ()
+(imenu-add-to-menubar "TAGS"))
+(add-hook 'semantic-init-hooks 'my-semantic-hook)
+
+;; ctags
+;;(require 'semanticdb-ectag)
+;;(semantic-load-enable-primary-exuberent-ctags-support)
+;;(global-semantic-idle-tag-highlight-mode 1)
+
+#+end_src
+
+** ECB
+#+begin_src emacs-lisp
+(setq stack-trace-on-error t)
+(setq ecb-layout-name "left11")
+
+;;(setq ecb-layout-name "left-symboldef")
+
+(setq ecb-tip-of-the-day nil)
+
+;; (setq ecb-analyse-buffer-sync-delay )
+;; (setq ecb-analyse-show-node-info )
+;; (setq ecb-basic-buffer-sync-delay )
+;; (setq ecb-bucket-node-display )
+;; (setq ecb-compile-window-height 10 )
+;; (setq ecb-compile-window-temporally-enlarge )
+;; (setq ecb-compile-window-width )
+;; (setq ecb-directories-show-node-info )
+;; (setq ecb-eshell-buffer-sync-delay )
+;; (setq ecb-exclude-parents-regexp )
+;; (setq ecb-fix-window-size )
+;; (setq ecb-font-lock-tags )
+;; (setq ecb-highlight-tag-with-point-delay )
+;; (setq ecb-history-show-node-info )
+;; (setq ecb-key-map )
+;; (setq ecb-layout-name )
+;; (setq ecb-layout-window-sizes )
+;; (setq ecb-methods-show-node-info )
+;; (setq ecb-mode-line-data )
+;; (setq ecb-mode-line-display-window-number )
+;; (setq ecb-mode-line-prefixes )
+(setq ecb-show-tags '(
+	(default  (include collapsed nil) (parent collapsed nil) (type flattened nil) (variable collapsed access) (function flattened access) (label hidden nil) (t collapsed nil))
+	(c++-mode (include collapsed nil) (parent collapsed nil) (type flattened nil) (variable collapsed access) (function flattened access) (function collapsed access) (label hidden nil) (t collapsed nil))
+	(c-mode   (include collapsed nil) (parent collapsed nil) (type flattened nil) (variable collapsed access) (function flattened access) (function collapsed access) (label hidden nil) (t collapsed nil))
+	(bovine-grammar-mode (keyword collapsed name) (token collapsed name) (nonterminal flattened name) (rule flattened name) (t collapsed nil))
+	(wisent-grammar-mode (keyword collapsed name) (token collapsed name) (nonterminal flattened name) (rule flattened name) (t collapsed nil))
+	(texinfo-mode (section flattened nil) (def collapsed name) (t collapsed nil)))
+)
+;; (setq ecb-source-path )
+;; (setq ecb-sources-show-node-info )
+;; (setq ecb-speedbar-buffer-sync-delay )
+;; (setq ecb-symboldef-buffer-sync-delay )
+;; (setq ecb-toggle-layout-sequence )
+;; (setq ecb-tag-display-function )
+;; (setq ecb-tree-do-not-leave-window-after-select )
+;; (setq ecb-type-tag-display )
+;; (setq ecb-type-tag-expansion )
+ (setq ecb-use-speedbar-instead-native-tree-buffer nil)
+;; (setq ecb-windows-height )
+;; (setq ecb-windows-width )
+
+(custom-set-variables '(ecb-options-version "2.40"))
+;;(ecb-activate)
+#+end_src
+
+** Ascope
+#+begin_src emacs-lisp
+(require 'ascope)
+(defun af-ascope-hook ()
+(define-key c-mode-base-map (kbd "C-c a I") 'ascope-init)
+(define-key c-mode-base-map (kbd "C-c a d") 'ascope-find-global-definition)
+(define-key c-mode-base-map (kbd "C-c a s") 'ascope-find-this-symbol)
+(define-key c-mode-base-map (kbd "C-c a t") 'ascope-find-this-text-string)
+(define-key c-mode-base-map (kbd "C-c a c") 'ascope-find-functions-calling-this-function)
+(define-key c-mode-base-map (kbd "C-c a C") 'ascope-find-called-functions)
+(define-key c-mode-base-map (kbd "C-c a e") 'ascope-find-this-egrep-pattern)
+(define-key c-mode-base-map (kbd "C-c a f") 'ascope-find-this-file)
+(define-key c-mode-base-map (kbd "C-c a i") 'ascope-find-files-including-file)
+(define-key c-mode-base-map (kbd "C-c a o") 'ascope-clear-overlay-arrow)
+(define-key c-mode-base-map (kbd "C-c a u") 'ascope-pop-mark)
+)
+
+(add-hook 'c-mode-hook 'af-ascope-hook)
+(add-hook 'c++-mode-hook 'af-ascope-hook)
+
+;; M-x ascope-find-global-definition
+;; M-x ascope-find-this-symbol
+;; M-x ascope-find-this-text-string
+;; M-x ascope-find-functions-calling-this-function
+;; M-x ascope-find-called-functions
+;; M-x ascope-find-files-including-file
+;; M-x ascope-all-symbol-assignments
+;; M-x ascope-clear-overlay-arrow
+;; M-x ascope-pop-mark
+
+#+end_src
+
+** eassist
+#+begin_src emacs-lisp
+(require 'eassist)
+
+(defun af-eassist-hook ()
+  (local-set-key "\C-ct" 'eassist-switch-h-cpp)
+  (local-set-key "\C-xt" 'eassist-switch-h-cpp)
+  (local-set-key "\C-ce" 'eassist-list-methods)
+  )
+
+(add-hook 'c-mode-common-hook 'af-eassist-hook)
+#+end_src
+
+** Autocomplete
+#+begin_src emacs-lisp
+;;
+(defun af-c-mode-cedet-hook ()
+  (add-to-list 'ac-sources 'ac-source-gtags)
+  (add-to-list 'ac-sources 'ac-source-semantic))
+(add-hook 'c-mode-common-hook 'af-c-mode-cedet-hook)
+#+end_src
+
+** GoCode
+#+begin_src emacs-lisp
+;; Golang daemon compaltion
+(require 'go-autocomplete)
+(require 'auto-complete-config)
+#+end_src
+
+** Tempalte
+#+begin_src emacs-lisp
+;;
+
+#+end_src
+
+
+** Kernel Stuff
+*** QxFPGA
+#+begin_src emacs-lisp
+;;(ede-cpp-root-project
+;; "qxfpga"
+;; :name "qxfpga driver"
+;; :file "~/quantumx/projects/ppc/linux-drivers/qxfpga/Makefile"
+;; :include-path '("/" )
+;; :system-include-path
+;; '(
+;;   "~/quantumx/projects/ppc/linux-3.4.10/include"
+;;   "~/quantumx/projects/ppc/linux-3.4.10/arch/powerpc/include"
+;;   "~/quantumx/projects/ppc/"
+;;   "opt/cs/freescale-2010.09/powerpc-linux-gnu/libc/usr/include"
+;;   )
+;; :spp-table
+;; '(("__KERNEL__" . "") ("__DUMMY__" . "")))
+#+end_src
+
+*** EcatSlave
+#+begin_src emacs-lisp
+;;(ede-linux
+;; "EcatSlave"
+;; :name "EcatSlave kernel driver"
+;; :file "~/quantumx/projects/ppc/linux-drivers/ecscx/Makefile"
+;; :include-path '("/" )
+;; :system-include-path
+;; '(
+;;   "~/quantumx/projects/ppc/linux-3.4.10/include"
+;;   "~/quantumx/projects/ppc/linux-3.4.10/arch/powerpc/include"
+;;   "opt/cs/freescale-2010.09/powerpc-linux-gnu/libc/usr/include"
+;;   )
+;; :spp-table
+;; '(("__KERNEL__" . "") ("__DUMMY__" . "")))
+#+end_src
+
+** Applications
+
+Create a Project.ede equivalent for ede-simple-project
+by telling Emacs to load Project.el files
+#+begin_src emacs-lisp
+(message "Loading project settungs ...")
+(global-ede-mode 1)
+(ede-enable-generic-projects)
+(defun check-for-project-el ()
+  (if (file-exists-p "project.el")
+	(load-file "project.el")
+	(ede-turn-on-hook)
+  )
+)
+(add-hook 'find-file-hook 'check-for-project-el)
+#+end_src
+
+*** MX840
+#+begin_src emacs-lisp
+;;(ede-cpp-root-project
+;; "MX840"
+;; :name "MX840 Messapplication"
+;; :file "~/quantumx/projects/ppc/quantumx/MX840/CMakeLists.txt"
+;; :include-path '("/" )
+;; :system-include-path
+;; '(
+;;   "~/quantumx/projects/ppc/quantumx/Domains"
+;;   "~/quantumx/projects/ppc/quantumx/"
+;;   "~/quantumx/projects/ppc/"
+;;   "opt/cs/freescale-2010.09/powerpc-linux-gnu/libc/usr/include"
+;;   )
+;; :spp-table
+;; '(
+;;("_HBM_HARDWARE" . "")
+;;("_LINUX" . "")
+;;("_BIG_ENDIAN" . "" )
+;;("USE_JET" . "" )
+;;("USE_CARGO" . "" )
+;;("MX_APPL" . "" )
+;;))
+#+end_src
+
+*** Mspupd
+#+begin_src emacs-lisp
+;;(ede-cpp-root-project
+;; "msp-tools"
+;; :name "msp update tool"
+;; :file "~/quantumx/projects/ppc/msp-tools/CMakeLists.txt"
+;; :include-path '("/" )
+;; :system-include-path
+;; '(
+;;;;   "~/quantumx/projects/ppc/quantumx/Domains"
+;;;;   "~/quantumx/projects/ppc/quantumx/"
+;;   "~/quantumx/projects/ppc/msp-tools/"
+;;   "opt/cs/freescale-2010.09/powerpc-linux-gnu/libc/usr/include"
+;;   )
+;; :spp-table
+;; '(
+;;;;("_HBM_HARDWARE" . "")
+;;("_LINUX" . "")
+;;;;("_BIG_ENDIAN" . "" )
+;;;;("USE_JET" . "" )
+;;;;("USE_CARGO" . "" )
+;;;;("MX_APPL" . "" )
+;;))
+#+end_src
+
+** Templates
+*** Template
+#+begin_src emacs-lisp
+;;
+#+end_src
+
+*** Template
+
+#+begin_src emacs-lisp
+;;
+(defun af-go-mode-cedet-hook()
+(add-to-list 'ac-modes 'go-mode)
+)
+(add-hook 'go-mode-hook 'af-go-mode-cedet-hook)
+
+
+#+end_src
+
+*** Template
+
+#+begin_src emacs-lisp
+;;
+#+end_src
+
+*** Template
+
+#+begin_src emacs-lisp
+;;
+#+end_src
+
+*** Template
+
+#+begin_src emacs-lisp
+;;
+#+end_src

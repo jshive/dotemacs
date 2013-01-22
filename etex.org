@@ -1,0 +1,25 @@
+* Etex Configuration
+
+#+begin_src emacs-lisp
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/elpa/auctex-11.86"))
+(load "~/.emacs.d/elpa/auctex-11.86/auctex-autoloads.el" nil t t)
+;(load "auctex.el" nil t t)
+(load "preview.el" nil t t)
+(setq TeX-auto-save t)
+(setq TeX-parse-self t)
+(setq TeX-PDF-mode t)
+(setq-default TeX-master nil)
+(add-hook 'LaTeX-mode-hook 'visual-line-mode)
+(add-hook 'LaTeX-mode-hook 'flyspell-mode)
+(add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
+(add-hook 'LaTeX-mode-hook 'turn-on-reftex)
+(setq reftex-plug-into-AUCTeX t)
+
+(eval-after-load 'latex
+  '(define-key LaTeX-mode-map (kbd "C-<return>") 'LaTeX-insert-item))
+#+end_src
+
+(defun my-latex-mode--hook ()
+  (add-to-list 'ac-sources 'ac-source-semantic)
+  (add-to-list 'ac-sources 'ac-source-gtags))
+(add-hook 'LaTex-mode-hook 'my-latex-mode-hook)

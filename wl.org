@@ -1,0 +1,395 @@
+* Organizer
+** Jabeer
+  #+begin_src emacs-lisp
+  (setq jabber-account-list
+	'(("frsn@gmail.com"
+	   (:network-server . "talk.google.com")
+	   (:connection-type . ssl))))
+  #+end_src
+
+** Wanderlust Configuration
+  #+begin_src emacs-lisp
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp/mailcrypt"))
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp/apel"))
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp/semi"))
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp/flim"))
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp/emu"))
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp/wl"))
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp/bbdb"))
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp/w3m"))
+  #+end_src
+
+Diactivate scroll-bar and menu-bar
+  #+begin_src emacs-lisp
+(if (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
+;;(if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
+(if (fboundp 'menu-bar-mode) (menu-bar-mode -1))
+  #+end_src
+
+#+begin_src emacs-lisp
+(require 'mime-w3m)
+(require 'octet)
+(octet-mime-setup)
+#+end_src
+
+#+begin_src emacs-lisp
+(require 'bbdb)
+(bbdb-initialize)
+#+end_src
+
+#+begin_src emacs-lisp
+(setq ssl-program-name "gnutls-cli")
+(setq ssl-program-arguments
+	  '("--port" service
+		"--insecure"
+		"--x509cafile" "/etc/ssl/certs/ca-certificates.crt" ;; verify
+		;; certificates
+		host))
+#+end_src
+
+#+begin_src emacs-lisp
+(autoload 'wl "wl" "Wanderlust" t)
+(autoload 'wl-other-frame "wl" "Wanderlust on new frame." t)
+(autoload 'wl-draft "wl-draft" "Write draft with Wanderlust." t)
+(autoload 'wl-user-agent-compose "wl-draft" "Compose with Wanderlust." t)
+#+end_src
+
+#+begin_src emacs-lisp
+(setq read-mail-command 'wl)
+
+;;(if (boundp 'mail-user-agent)
+	(setq mail-user-agent 'wl-user-agent)
+;;)
+
+;;(if (fboundp 'define-mail-user-agent)
+	(define-mail-user-agent
+	  'wl-user-agent
+	  'wl-user-agent-compose
+	  'wl-draft-send
+	  'wl-draft-kill
+	  'mail-send-hook)
+;;)
+#+end_src
+
+
+
+
+Layout settings
+#+begin_src emacs-lisp
+(setq wl-message-window-size '(3 . 7))               ;; Proportion of the summary and message windows
+(setq wl-stay-folder-window t)                       ;; show the folder pane (left)
+(setq wl-folder-window-width 30)                     ;; toggle on/off with 'i'
+(setq wl-generate-mailer-string-function 'wl-generate-user-agent-string-1)
+(setq wl-thread-indent-level 2)
+(setq wl-thread-have-younger-brother-str "├──►")
+(setq wl-thread-youngest-child-str       "╰──►")
+(setq wl-thread-vertical-str             "|")
+;;(setq wl-thread-horizontal-str           "►")
+;;(setq wl-thread-horizontal-str           "►")
+(setq wl-thread-space-str                " ")
+(setq wl-summary-width    nil)
+(setq wl-summary-line-format "%n%T%P %D-%M %h:%m %t%[%c %f% %] %s")
+(setq wl-folder-check-async t)
+(setq wl-message-buffer-prefetch-folder-type-list nil)
+
+(setq       wl-message-ignored-field-list '("^.*"))
+(setq       wl-message-visible-field-list '("^From:" "^To:" "^Cc:" "^Date:" "^Subject:" "^User-Agent:" "^X-Mailer:"))
+(setq       wl-message-sort-field-list    wl-message-visible-field-list)
+(setq       wl-message-window-size '(1 . 3))
+(setq       wl-draft-preview-attributes-buffer-lines 7)
+;;(run-with-timer 0 (* 5 10) 'wl-folder-check-all)
+#+end_src
+
+
+Setting as "t" means that wanderlust should use a new frame for the draft
+#+begin_src emacs-lisp
+;; Setting as "t" means that wanderlust should use a new frame for the draft
+(setq wl-draft-use-frame t)
+#+end_src
+
+
+
+#+begin_src emacs-lisp
+;;(setq wl-icon-directory "~/.emacs.d/site-lisp/icons/wl")
+(setq wl-folders-file "~/.emacs.d/folders")
+
+
+(setq smtp-use-8bitmime nil)
+
+(setq wl-insert-message-id nil)
+;; let the SMTP servers handle the
+ ;; message-id and stop warning
+ ;; from  wanderlust
+
+(setq wl-folder-check-async t)
+;;(setq wl-default-folder "%inbox")
+;;(setq wl-default-spec "%")
+
+
+(setq elmo-imap4-use-modified-utf7 t)
+(setq elmo-network-session-idle-timeout 600)         ;; auto-reconnect
+
+(setq w3m-use-form t)
+(setq w3m-display-inline-image t)
+#+end_src
+
+#+begin_src emacs-lisp
+(setq wl-template-alist
+	  '(
+		("list"  ; Gmail List
+		 (wl-from . "Andreas Friesen <a.frsn@gmail.com>")
+		 ("From" . wl-from)
+		 (wl-smtp-connection-type . 'starttls)
+		 (wl-smtp-posting-port . 587)
+		 (wl-smtp-authenticate-type . "plain")
+		 (wl-smtp-posting-user . "frsn")
+		 (wl-smtp-posting-server . "smtp.gmail.com")
+		 (wl-local-domain . "gmail.com")
+		 (signature-file-name . "~/.emacs.d/list.signature")
+		 )
+		("gmail"      ; Gmail Privat
+		 (wl-from . "Andreas Friesen <frsn@gmail.com>")
+		 ("From" . wl-from)
+		 (wl-smtp-connection-type . 'starttls)
+		 (wl-smtp-posting-port . 587)
+		 (wl-smtp-authenticate-type . "plain")
+		 (wl-smtp-posting-user . "ms.frsn")
+		 (wl-smtp-posting-server . "smtp.gmail.com")
+		 (wl-local-domain . "gmail.com")
+		 (signature-file-name . "~/.emacs.d/privat.signature")
+		 )
+		)
+	  )
+#+end_src
+
+Automatically select the correct template based on which folder I'm visiting
+#+begin_src emacs-lisp
+;; automatically select the correct template based on which folder I'm visiting
+(setq wl-draft-config-matchone t) ;; If non-nil, applied only one element of `wl-draft-config-alist'.
+(setq wl-draft-config-alist
+	  '(((and (string-match ".*a\.frsn*" wl-draft-parent-folder))
+		 (template . "list"))
+		((and (string-match ".*frsn*" wl-draft-parent-folder))
+		 (template . "gmail"))
+		)
+	  )
+#+end_src
+
+Apply wl-draft-config-alist as soon as you enter in a draft buffer. Without
+this wanderlust would apply it only when actually sending the e-mail.
+#+begin_src emacs-lisp
+(add-hook 'wl-mail-setup-hook 'wl-draft-config-exec)
+#+end_src
+
+If you want to manually change the template use C-c C-j in a draft buffer
+(wl-template-select). The four lines below allow changint the template with
+the arrow keys
+#+begin_src emacs-lisp
+;(define-key wl-template-mode-map (kbd "<right>") 'wl-template-next)
+;(define-key wl-template-mode-map (kbd "<left>") 'wl-template-prev)
+;(define-key wl-template-mode-map (kbd "<up>") 'wl-template-next)
+;(define-key wl-template-mode-map (kbd "<down>") 'wl-template-prev)
+#+end_src
+
+
+#+begin_src emacs-lisp
+(autoload 'wl-user-agent-compose "wl-draft" nil t)
+(if (boundp 'mail-user-agent)
+	(setq mail-user-agent 'wl-user-agent))
+(if (fboundp 'define-mail-user-agent)
+	(define-mail-user-agent
+	  'wl-user-agent
+	  'wl-user-agent-compose
+	  'wl-draft-send
+	  'wl-draft-kill
+	  'mail-send-hook))
+#+end_src
+
+#+begin_src emacs-lisp
+(setq  wl-forward-subject-prefix "Fwd: " )    ;; use "Fwd: " not "Forward: "
+#+end_src
+
+You should set this variable if you use multiple e-mail addresses.
+#+begin_src emacs-lisp
+;; You should set this variable if you use multiple e-mail addresses.
+(setq wl-user-mail-address-list (quote ("frsn@gmail.com" "a.frsn@gmail.com")))
+#+end_src
+
+
+#+begin_src emacs-lisp
+(setq wl-message-ignored-field-list (quote (".*Received:"
+											".*Path:"
+											".*Id:"
+											"^References:"
+											"^Replied:"
+											"^Errors-To:"
+											"^Lines:"
+											"^Sender:"
+											".*Host:"
+											"^Xref:"
+											"^Content-Type:"
+											"^Precedence:"
+											"^Status:"
+											"^X-VM-.*:"
+											"^List-*"
+											"^Authentication-Results*"
+											"^X-*"
+											"^Received-SPF*"
+											"^DKIM-Signature:"
+											"^DomainKey-Signature:"
+											"^X-Mailman-Version:")))
+
+#+end_src
+
+Fields in the e-mail header that I want to see even if they match the regex in wl-message-ignored-field-list
+#+begin_src emacs-lisp
+;; Fields in the e-mail header that I want to see even if they match the regex in wl-message-ignored-field-list
+(setq wl-message-visible-field-list (quote ("^Dnas.*:" "^Message-Id:" "^X-Mailer:" "^X-Mailman-Version:")))
+#+end_src
+
+Enables auto-fill-mode in the draft buffer
+#+begin_src emacs-lisp
+;; Enables auto-fill-mode in the draft buffer
+(add-hook 'wl-mail-setup-hook 'auto-fill-mode)
+
+;; Use orgstruct++-mode in the draft buffer
+;; (add-hook 'mail-mode-hook 'turn-on-orgstruct)
+(add-hook 'mail-mode-hook 'turn-on-orgstruct++)
+
+;(add-hook 'mime-view-mode-hook
+;         (λ ()
+;            (local-set-key "f" 'browse-url)
+;            (local-set-key "F" 'browse-url-of-region)))
+#+end_src
+
+** Biff
+Set mail-icon to be shown universally in the modeline.
+#+begin_src emacs-lisp
+(setq global-mode-string
+	  (cons
+	   '(wl-modeline-biff-status
+		 wl-modeline-biff-state-on
+		 wl-modeline-biff-state-off)
+	   global-mode-string)
+)
+
+;;; Biff: Check for new mail
+(setq wl-biff-check-folder-list
+	  '(
+		"%INBOX:\"frsn@gmail.com\"/clear@imap.gmail.com:993!"
+		"%INBOX:\"a.frsn@gmail.com\"/clear@imap.gmail.com:993!"
+		)
+	  wl-biff-check-interval 60
+	  wl-biff-use-idle-timer t)
+#+end_src
+
+#+begin_src emacs-lisp
+(setq       wl-generate-mailer-string-function 'wl-generate-user-agent-string-1)
+(setq       wl-thread-indent-level 2)
+(setq       wl-thread-have-younger-brother-str "├──►")
+(setq       wl-thread-youngest-child-str       "╰──►")
+(setq       wl-thread-vertical-str             "|")
+;;(setq       wl-thread-horizontal-str           "►")
+(setq       wl-thread-horizontal-str           "─")
+(setq       wl-thread-space-str                " ")
+(setq       wl-summary-width    nil)
+(setq       wl-summary-line-format "%n%T%P %D-%M %h:%m %t%[%c %f% %] %s")
+(setq       wl-folder-check-async t)
+(setq       wl-message-buffer-prefetch-folder-type-list nil)
+(setq       mime-transfer-level 7)
+(setq       mime-edit-split-message nil)
+(setq       mime-edit-message-max-length 32768)
+(setq       wl-message-ignored-field-list '("^.*"))
+(setq       wl-message-visible-field-list '("^From:" "^To:" "^Cc:" "^Date:" "^Subject:" "^User-Agent:" "^X-Mailer:"))
+(setq       wl-message-sort-field-list    wl-message-visible-field-list)
+(setq       wl-message-window-size '(1 . 3))
+(setq       wl-draft-preview-attributes-buffer-lines 7)
+;;(run-with-timer 0 (* 5 10) 'wl-folder-check-all)
+#+end_src
+
+#+begin_src emacs-lisp
+;;
+#+end_src
+
+** LDAP (disabled)
+#+begin_src emacs-lisp
+;; LDAP
+;;(setq wl-use-ldap t)
+;;  ;;; these are from Mozilla on CERN RH Linux
+;;(setq wl-ldap-server "ldap.cern.ch")
+;;(setq wl-ldap-port 389)
+;;(setq wl-ldap-base "o=cern,c=ch") ;; CERN
+;;  ;;; wl-ldap-search-attribute-type-list
+;;  ;;; the default is '("sn" "cn" "mail" "email), <
+;;  ;;; and takes infinite time to return
+;;(setq wl-ldap-search-attribute-type-list '("sn" "cn" "mail"))
+#+end_src
+
+** BBdb
+#+begin_src emacs-lisp
+(setq bbdb-file "~/.emacs.d/bbdb")           ;; keep ~/ clean; set before loading
+(require 'bbdb)
+(bbdb-initialize)
+(setq
+	bbdb-offer-save 1                        ;; 1 means save-without-asking
+	bbdb-use-pop-up t                        ;; allow popups for addresses
+	bbdb-electric-p t                        ;; be disposable with SPC
+	bbdb-popup-target-lines  1               ;; very small
+
+	bbdb-dwim-net-address-allow-redundancy t ;; always use full name
+	bbdb-quiet-about-name-mismatches 2       ;; show name-mismatches 2 secs
+
+	bbdb-always-add-address t                ;; add new addresses to existing...
+											 ;; ...contacts automatically
+	bbdb-canonicalize-redundant-nets-p t     ;; x@foo.bar.cx => x@bar.cx
+
+	bbdb-completion-type nil                 ;; complete on anything
+
+	bbdb-complete-name-allow-cycling t       ;; cycle through matches
+											 ;; this only works partially
+
+	bbbd-message-caching-enabled t           ;; be fast
+	bbdb-use-alternate-names t               ;; use AKA
+
+	bbdb-elided-display t                    ;; single-line addresses
+
+	;; auto-create addresses from mail
+	bbdb/mail-auto-create-p 'bbdb-ignore-some-messages-hook
+	bbdb-ignore-some-messages-alist ;; don't ask about fake addresses
+	;; NOTE: there can be only one entry per header (such as To, From)
+	;; http://flex.ee.uec.ac.jp/texi/bbdb/bbdb_11.html
+
+	'(( "From" . "no.?reply\\|DAEMON\\|daemon\\|facebookmail\\|twitter")))
+
+#+end_src
+
+** Calender
+   #+begin_src emacs-lisp
+(require 'calfw)
+(require 'calfw-ical)
+(require 'calfw-org)
+(require 'calfw-cal)
+(require 'calfw-gcal)
+
+
+;; Unicode characters
+	(setq cfw:fchar-junction ?╋
+		  cfw:fchar-vertical-line ?┃
+		  cfw:fchar-horizontal-line ?━
+		  cfw:fchar-left-junction ?┣
+		  cfw:fchar-right-junction ?┫
+		  cfw:fchar-top-junction ?┯
+		  cfw:fchar-top-left-corner ?┏
+		  cfw:fchar-top-right-corner ?┓)
+
+(defun ecal-open-calendar ()
+  (interactive)
+  (cfw:open-calendar-buffer
+   :contents-sources
+   (list
+	(cfw:org-create-source "Green")  ; orgmode source
+	(cfw:cal-create-source ) ; diary source
+	(cfw:ical-create-source "gcal" "https://www.google.com/calendar/ical/frsn%40gmail.com/private-13ddbe5367387a4026f9ad66d6ccba4d/basic.ics" "IndianRed")
+	(cfw:ical-create-source "gcal" "https://www.google.com/calendar/ical/de.german%23holiday%40group.v.calendar.google.com/public/basic.ics" "Orange" )
+   )))
+   #+end_src

@@ -1,0 +1,487 @@
+* Common Customazation
+** Common stuff
+#+begin_src emacs-lisp
+(require 'cl)
+(require 'saveplace)
+(require 'ffap)
+(require 'uniquify)
+(require 'ansi-color)
+(require 'recentf)
+#+end_src
+
+** Window-Stuff
+*** next/prev window
+#+begin_src emacs-lisp
+(defun select-next-window ()
+  "Switch to the next window"
+  (interactive)
+  (select-window (next-window)))
+
+(defun select-previous-window ()
+  "Switch to the previous window"
+  (interactive)
+  (select-window (previous-window)))
+(global-set-key [(meta right)] 'select-next-window)
+(global-set-key [(meta left)]  'select-previous-window)
+#+end_src
+
+*** enlarge/shring window
+#+begin_src emacs-lisp
+(global-set-key [(control shift up)] 'enlarge-window)
+(global-set-key [(control shift down)] 'shrink-window)
+(global-set-key [(control shift left)] 'enlarge-window-horizontally)
+(global-set-key [(control shift right)] 'shrink-window-horizontally)
+#+end_src
+
+*** window navigation
+#+begin_src emacs-lisp
+(windmove-default-keybindings)
+#+end_src
+
+** Package stuff
+#+begin_src emacs-lisp
+(require 'package)
+(add-to-list 'package-archives '("original" .  "http://tromey.com/elpa/") t)
+(add-to-list 'package-archives '("gnu" .       "http://elpa.gnu.org/packages/") t)
+(add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/") t)
+(add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
+
+(package-initialize)
+
+(when (not package-archive-contents)
+  (package-refresh-contents))
+
+ ;; Add in your own as you wish:
+ (defvar my-packages '( auctex auto-complete bm cmake-mode
+	   cmake-project find-file-in-project calfw calfw-gcal
+	   fuzzy htmlize idle-highlight lua-mode magit paredit
+	   popup popwin smex highlight-indentation move-text
+	   highlight-symbol yasnippet-bundle magit ascope )
+	"A list of packages to ensure are installed at launch.")
+
+	(dolist (p my-packages)
+	  (when (not (package-installed-p p))
+		  (package-install p)))
+#+end_src
+
+
+** Look
+Remove unused UI elements
+#+begin_src emacs-lisp
+(if (fboundp 'scroll-bar-mode) (scroll-bar-mode 0))
+(if (fboundp 'menu-bar-mode) (menu-bar-mode 0))
+(if (fboundp 'tool-bar-mode) (tool-bar-mode 0))
+
+(setq inhibit-startup-message t)
+
+;; shhht, give me some time to think, don't blink
+(blink-cursor-mode 0)
+
+;; show matching parens
+(show-paren-mode 1)
+
+;; always show column numbers
+(column-number-mode 1)
+
+;; Narrow (C-x n n)
+(put 'narrow-to-region 'disabled nil)
+
+;; take the short answer, y/n is yes/no
+(defalias 'yes-or-no-p 'y-or-n-p)
+#+end_src
+*** Theme
+#+begin_src emacs-lisp
+(message "Configure theme ...")
+(load-theme 'sweet t)
+#+end_src
+
+*** Fonts
+#+begin_src emacs-lisp
+(condition-case nil
+  (set-default-font "Droid Sans Mono 8")
+  (error (condition-case nil
+			 (set-default-font "Cousine")
+		   (error (condition-case nil
+	(set-default-font "Ubuntu Mono 16")
+					(error nil))))))
+
+(cond
+ ((= 24 emacs-major-version)
+  ;; eval lighty directly, adding it to command-switch-alist will result
+  ;; in a later evaluation.
+;  (add-to-list 'custom-theme-load-path aa-libfiles-dir)
+;  (if (member "-lighty" command-line-args)
+;      (progn
+;        (setq command-line-args (delete "-lighty" command-line-args))
+;        (load-theme 'solarized-light t)
+;        (set-default-font "Ubuntu Mono 28"))
+;    (load-theme 'candy t))
+  ))
+#+end_src
+
+*** Windows/Settings
+
+#+begin_src emacs-lisp
+;;Set window with and height
+;; The following two functions prompt for a width/height in columns and tries to set the window size accordingly.
+(defun emax/window-set-size-internal (is-width &optional reqsize)
+  "Prompts for window size (in columns) and adjusts buffer accordingly."
+  (if is-width
+	  (progn
+		(setq size (window-width))
+		(setq prompt "Width: "))
+	(progn
+	  (setq size (window-height))
+	  (setq prompt "Height: ")))
+  (if (eq reqsize nil)
+	  (setq reqsize (string-to-int
+					 (read-from-minibuffer prompt (format "%d" size)))))
+  (if (> reqsize size)
+	  (enlarge-window (- reqsize size) is-width)
+	(shrink-window (- size reqsize) is-width)))
+
+(defun emax/window-set-width ()
+  "Set window width."
+  (interactive)
+  (emax/window-set-size-internal t))
+
+(defun emax/window-set-height ()
+  "Set window height."
+  (interactive)
+  (emax/window-set-size-internal nil))
+
+(defun emax/make80 ()
+  "Make the current window 80 chars wide."
+  (interactive)
+  (emax/window-set-size-internal t 80))
+
+#+end_src
+
+*** Window switch
+#+begin_src emacs-lisp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Numbered windows makes it easy to switch between windows by using
+;; Alt-NUMBER to switch between windows. The number is displayed in
+;; the modeline of each window.
+
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp"))
+(require 'window-number)
+(window-number-mode)
+(window-number-meta-mode)
+#+end_src
+
+*** Workgroups
+
+#+begin_src emacs-lisp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; workgroups
+;(add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp/work;groups"))
+;(require 'workgroups)
+;(setq wg-prefix-key (kbd "C-c w"))
+;(workgroups-mode 1)
+;(wg-load "~/.workgroups")
+;(setq wg-morph-on nil) ;; no morphing please
+#+end_src
+
+*** Windowlayout
+#+begin_src emacs-lisp
+;(require 'perspective)
+;(persp-mode)
+#+end_src
+
+*** iBuffer
+
+#+begin_src emacs-lisp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; iBuffer
+(autoload 'ibuffer "ibuffer" "List buffers." t)
+(global-set-key (kbd "C-x C-b") 'ibuffer)
+
+(setq ibuffer-saved-filter-groups
+  (quote (("default"
+	("Programming" ;; prog stuff not already in MyProjectX
+	 (or
+	  (mode . c-mode)
+	  (mode . c++-mode)
+	  (mode . cmake-mode)
+;;      (mode . python-mode)
+	  (mode . emacs-lisp-mode)
+	  (mode . lisp-mode)
+;;      (mode . sql-mode)
+	  (mode . html-mode)
+	  (mode . js2-mode)
+;;      (mode . pascal-mode)
+	  (mode . makefile-gmake-mode)
+	  (mode . nxml-mode)
+	  (mode . yaml-mode)
+	  (mode . sh-mode)
+;;      (mode . rst-mode)
+	  (mode . go-mode)
+;;      (mode . po-mode)
+	  ;; etc
+	  ))
+	("Dired"
+	 (or
+	  (mode . dired-mode)))
+	("Version Control"
+	 (or
+	  (mode . magit-mode)
+	  (name . "^*magit")
+	  (mode . ahg-status-mode)))
+	("Org" ;; all org-related buffers
+	 (or
+	  (mode . org-mode)
+	  (mode . org-agenda-mode)
+	  (mode . diary-mode)
+	  (mode . calendar-mode)
+	  (name . "^*Fancy Diary")
+	  ))
+	("Emacs"
+	 (or
+	  (name . "^\\*scratch\\*$")
+	  (name . "^\\*Messages\\*$")
+	  (name . "^\\*ielm\\*$")
+	  (mode . help-mode)))
+	))))
+
+(add-hook 'ibuffer-mode-hook
+  (lambda ()
+	(ibuffer-switch-to-saved-filter-groups "default")))
+
+#+end_src
+
+*** IDO
+#+begin_src emacs-lisp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; IDO
+
+(ido-mode t)
+(setq ido-enable-flex-matching t)
+(setq ido-auto-merge-work-directories-length -1)
+#+end_src
+
+** Tramp
+#+begin_src emacs-lisp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; tramp
+(require 'tramp)
+(setq tramp-default-method "ssh")
+
+
+#+end_src
+
+** Autocomplete
+#+begin_src emacs-lisp
+;; And write following code into your .emacs.
+
+(require 'auto-complete)
+(require 'auto-complete-config)
+(global-auto-complete-mode t)
+
+
+(setq-default ac-sources '(ac-source-words-in-all-buffer))
+(setq-default ac-sources '(ac-source-dictionary))
+(add-to-list 'ac-dictionary-directories "~/.emacs.d/dict")
+(ac-set-trigger-key "TAB")
+
+;; Here is my configuration. It is useful for many people.
+
+(setq-default ac-sources '(ac-source-words-in-same-mode-buffers))
+(add-hook 'emacs-lisp-mode-hook (lambda () (add-to-list 'ac-sources 'ac-source-symbols)))
+(add-hook 'auto-complete-mode-hook (lambda () (add-to-list 'ac-sources 'ac-source-filename)))
+(global-auto-complete-mode t)
+(set-face-background 'ac-candidate-face "lightgray")
+(set-face-underline 'ac-candidate-face "darkgray")
+(set-face-background 'ac-selection-face "steelblue")
+(define-key ac-completing-map "\M-n" 'ac-next)
+(define-key ac-completing-map "\M-p" 'ac-previous)
+(setq ac-auto-start 2)
+(setq ac-dwim t)
+(define-key ac-mode-map (kbd "M-TAB") 'auto-complete)
+
+
+#+end_src
+
+** Org-Mode
+#+begin_src emacs-lisp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;  Orgmode
+
+(require 'org)
+(require 'org-src)  ;; edit src inline
+;(require 'htmlize)  ;; required for export
+
+;; editing
+(add-hook 'org-mode-hook
+		 (lambda ()
+			(toggle-truncate-lines)))
+
+
+;; keybinding
+;; Map org-edit-special special, the default "C-c '"
+;; needs an extra shift on my keyboard layout
+
+(define-key org-mode-map (kbd "C-c #") 'org-edit-special)
+(define-key org-src-mode-map (kbd "C-c #") 'org-edit-src-exit)
+
+#+end_src
+
+** Highlight-Symbol
+#+begin_src emacs-lisp
+(require 'highlight-symbol)
+(global-set-key (kbd "C-c h") 'highlight-symbol-at-point)
+(global-set-key (kbd "C-c k") 'highlight-symbol-next)
+(global-set-key (kbd "C-c j") 'highlight-symbol-prev)
+(global-set-key (kbd "C-c l") 'highlight-symbol-query-replace)
+#+end_src
+
+** Magit
+
+#+begin_src emacs-lisp
+(require 'magit)
+(require 'magit-svn)
+(add-hook 'magit-mode-hook 'turn-on-magit-svn)
+(global-set-key (kbd "C-c g") 'magit-status)
+#+end_src
+
+** Ack (better grep)
+#+begin_src emacs-lisp
+(autoload 'ack-same "full-ack" nil t)
+(autoload 'ack "full-ack" nil t)
+(autoload 'ack-find-same-file "full-ack" nil t)
+(autoload 'ack-find-file "full-ack" nil t)
+;; on Debian/Ubuntu you'll need to set the executable
+(setq ack-executable (executable-find "ack"))
+#+end_src
+
+** Browser settings
+Transparently open compressed files
+#+begin_src emacs-lisp
+(auto-compression-mode t)
+#+end_src
+
+Enable syntax highlighting
+#+begin_src emacs-lisp
+(global-font-lock-mode t)
+#+end_src
+
+
+#+begin_src emacs-lisp
+(setq browse-url-browser-function 'browse-url-generic browse-url-generic-program "/usr/bin/conkeror")
+#+end_src
+
+** After-save-hook for executable scripts
+#+begin_src emacs-lisp
+(add-hook 'after-save-hook
+		#'(lambda ()
+		(and (save-excursion
+			   (save-restriction
+				 (widen)
+				 (goto-char (point-min))
+				 (save-match-data
+				   (looking-at "^#!"))))
+			 (not (file-executable-p buffer-file-name))
+			 (shell-command (concat "chmod u+x " buffer-file-name))
+			 (message
+			  (concat "Saved as script: " buffer-file-name)))))
+#+end_src
+
+** After-save-hook remove trailing white spaces
+#+begin_src emacs-lisp
+(add-hook 'before-save-hook 'whitespace-cleanup)
+#+end_src
+** Copy a line
+   #+begin_src emacs-lisp
+(defun copy-line (&optional arg)
+  "Do a kill-line but copy rather than kill.  This function directly calls
+kill-line, so see documentation of kill-line for how to use it including prefix
+argument and relevant variables.  This function works by temporarily making the
+buffer read-only, so I suggest setting kill-read-only-ok to t."
+  (interactive "P")
+;;  (called-interactively-p )
+  (toggle-read-only 1)
+  (kill-line arg)
+  (toggle-read-only 0))
+
+(setq-default kill-read-only-ok t)
+(global-set-key "\C-c\C-k" 'copy-line)
+   #+end_src
+** Move region,line
+#+begin_src emacs-lisp
+(require 'move-text)
+(move-text-default-bindings)
+#+end_src
+** uniquify
+#+begin_src emacs-lisp
+(require 'uniquify)
+;;(setq uniquify-buffer-name-style 'reverse)
+;;(setq uniquify-buffer-name-style 'post-forward uniquify-separator ":")
+(setq uniquify-buffer-name-style 'forward)
+#+end_src
+** Keine abfrage, nach dem C x-k
+
+   #+begin_src emacs-lisp
+(defun kill-this-buffer-and-window ()
+ "Kill the current buffer and delete the selected window."
+ (interactive)
+ (let (buffer current-buffer)
+  (if (kill-buffer (current-buffer))
+   (if (> (count-windows) 1)
+	(delete-window (selected-window))))))
+(global-set-key (read-kbd-macro "C-x k") 'kill-this-buffer-and-window)
+   #+end_src
+
+** Backup Files anlegen unter /tmp
+Es werden nun unter /tmp/<benutzer> Dateien als Backup angelegt, deren
+Name sehr lang werden kann: Der Pfad wird mitgespeichert, indem die
+Slashes zu Ausrufungszeichen umgewandelt werden.
+   #+begin_src emacs-lisp
+(defvar user-temporary-file-directory
+  (concat temporary-file-directory user-login-name "/"))
+(make-directory user-temporary-file-directory t)
+(setq backup-by-copying t)
+(setq backup-directory-alist
+	  `(("." . ,user-temporary-file-directory)
+		(,tramp-file-name-regexp nil)))
+(setq auto-save-list-file-prefix
+	  (concat user-temporary-file-directory ".auto-saves-"))
+(setq auto-save-file-name-transforms
+	  `((".*" ,user-temporary-file-directory t)))
+   #+end_src
+
+** CxXv edit as root
+   #+begin_src emacs-lisp
+(defun find-alternative-file-with-sudo ()
+  "Open current buffer as root!"
+  (interactive)
+  (when buffer-file-name
+	(find-alternate-file
+	 (concat "/sudo:root@localhost:"
+		 buffer-file-name))))
+(global-set-key (kbd "C-x C-v") 'find-alternative-file-with-sudo)
+   #+end_src
+
+** Google iCalender
+   #+begin_src emacs-lisp
+;;
+;;; GOOGLE CALENDAR
+;; REQUIREMENT: var     `section-mode-google-calendar'
+
+;;  ;; can import google calendar in Emacs calendar
+;;  (when (try-require 'icalendar)
+;;	(when (try-require 'google-calendar)
+;;	  (setq google-calendar-user           "personne146@gmail.com")
+;;	  (setq google-calendar-code-directory (concat dotemacs-path "/plugins/google"))
+;;	  (setq google-calendar-directory      "~/tmp")
+;;	  (setq google-calendar-url            "http://www.google.com/calendar/ical/personne146%40gmail.com/private-/basic.ics")
+;;	  (setq google-calendar-auto-update    t)
+;;	  (google-calendar-download)
+;;	  ))
+;;
+   #+end_src
+
+** Google iCalender
+   #+begin_src emacs-lisp
+(require 'calfw)
+(require 'calfw-gcal)
+   #+end_src
